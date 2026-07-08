@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Encuesta VetPrompt™ Pro — BioVetAI™</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:    #1a1a2e;
+      --deep:  #0a0e1a;
+      --tech:  #0066FF;
+      --life:  #00B894;
+      --teal:  #00A896;
+      --gold:  #F59E0B;
+      --text:  #F0F0F0;
+      --muted: rgba(240,240,240,.65);
+      --border: rgba(240,240,240,.12);
+      --glass: rgba(255,255,255,.07);
+      --grad:  linear-gradient(100deg, #0066FF 0%, #00A896 52%, #00B894 100%);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background:
+        radial-gradient(circle at 15% 5%,  rgba(0,102,255,.18) 0, transparent 34rem),
+        radial-gradient(circle at 86% 12%, rgba(0,184,148,.12) 0, transparent 31rem),
+        var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem 4rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+    header .brand {
+      font: 800 1.5rem 'Syne', sans-serif;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    header .powered {
+      font-size: .75rem;
+      color: var(--muted);
+      margin-top: .2rem;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+    header h1 {
+      font: 700 1.6rem 'Syne', sans-serif;
+      margin-top: 1.2rem;
+      line-height: 1.2;
+    }
+    header p {
+      color: var(--muted);
+      font-size: .92rem;
+      margin-top: .5rem;
+    }
+
+    .card {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(16px);
+      border-radius: 24px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 580px;
+    }
+
+    .question { margin-bottom: 2rem; }
+    .question label {
+      display: block;
+      font: 600 .95rem 'Syne', sans-serif;
+      margin-bottom: .9rem;
+      color: var(--text);
+    }
+    .question label span {
+      display: inline-block;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-right: .35rem;
+    }
+
+    /* Scale options */
+    .scale { display: flex; gap: .5rem; flex-wrap: wrap; }
+    .scale input[type="radio"] { display: none; }
+    .scale label {
+      flex: 1; min-width: 52px;
+      text-align: center;
+      padding: .65rem .4rem;
+      border-radius: 12px;
+      border: 1.5px solid var(--border);
+      background: rgba(255,255,255,.04);
+      cursor: pointer;
+      font-size: .85rem;
+      font-weight: 600;
+      transition: all .2s;
+      margin-bottom: 0;
+      color: var(--muted);
+    }
+    .scale input[type="radio"]:checked + label {
+      background: var(--grad);
+      border-color: transparent;
+      color: #fff;
+      -webkit-text-fill-color: #fff;
+    }
+    .scale label:hover { border-color: var(--teal); color: #fff; }
+    .scale-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: .7rem;
+      color: var(--muted);
+      margin-top: .4rem;
+      padding: 0 .2rem;
+    }
+
+    /* Select options (recompra) */
+    .options { display: flex; flex-direction: column; gap: .55rem; }
+    .options input[type="radio"] { display: none; }
+    .options label {
+      padding: .75rem 1rem;
+      border-radius: 12px;
+      border: 1.5px solid var(--border);
+      background: rgba(255,255,255,.04);
+      cursor: pointer;
+      font-size: .9rem;
+      font-weight: 500;
+      transition: all .2s;
+      margin-bottom: 0;
+      color: var(--text);
+    }
+    .options input[type="radio"]:checked + label {
+      background: rgba(0,168,150,.12);
+      border-color: var(--teal);
+      color: #fff;
+    }
+    .options label:hover { border-color: var(--teal); }
+
+    /* Text inputs */
+    textarea {
+      width: 100%;
+      background: rgba(255,255,255,.05);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: .85rem 1rem;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .9rem;
+      resize: vertical;
+      min-height: 80px;
+      transition: border-color .2s;
+    }
+    textarea::placeholder { color: rgba(240,240,240,.35); }
+    textarea:focus { outline: none; border-color: var(--teal); }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 1.5rem 0;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 1rem;
+      border: none;
+      border-radius: 14px;
+      background: var(--grad);
+      color: #fff;
+      font: 700 1rem 'Syne', sans-serif;
+      cursor: pointer;
+      transition: opacity .2s, transform .15s;
+      margin-top: .5rem;
+    }
+    .btn-submit:hover { opacity: .9; transform: translateY(-1px); }
+    .btn-submit:active { transform: translateY(0); }
+    .btn-submit:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    /* Success state */
+    .success {
+      display: none;
+      text-align: center;
+      padding: 2rem 1rem;
+    }
+    .success .icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+    .success h2 {
+      font: 700 1.4rem 'Syne', sans-serif;
+      margin-bottom: .6rem;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .success p { color: var(--muted); font-size: .92rem; line-height: 1.6; }
+
+    .error-msg {
+      color: #ff6b6b;
+      font-size: .8rem;
+      margin-top: .4rem;
+      display: none;
+    }
+
+    @media (max-width: 480px) {
+      .scale label { padding: .55rem .2rem; font-size: .78rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="brand">VetPrompt™ Pro</div>
+  <div class="powered">Powered by BioVetAI™</div>
+  <h1>Tu opinión mejora<br>la herramienta</h1>
+  <p>2 minutos · Anónima · Solo para veterinarios que han usado el bot</p>
+</header>
+
+<div class="card">
+  <form id="survey-form" novalidate>
+
+    <!-- Q1: Facilidad de uso -->
+    <div class="question">
+      <label><span>01</span> Facilidad de uso del bot</label>
+      <div class="scale">
+        <input type="radio" name="ease" id="e1" value="1"><label for="e1">1</label>
+        <input type="radio" name="ease" id="e2" value="2"><label for="e2">2</label>
+        <input type="radio" name="ease" id="e3" value="3"><label for="e3">3</label>
+        <input type="radio" name="ease" id="e4" value="4"><label for="e4">4</label>
+        <input type="radio" name="ease" id="e5" value="5"><label for="e5">5</label>
+      </div>
+      <div class="scale-labels"><span>Muy difícil</span><span>Muy fácil</span></div>
+      <div class="error-msg" id="err-ease">Selecciona una opción</div>
+    </div>
+
+    <!-- Q2: Utilidad clínica -->
+    <div class="question">
+      <label><span>02</span> Utilidad clínica en la práctica real</label>
+      <div class="scale">
+        <input type="radio" name="useful" id="u1" value="1"><label for="u1">1</label>
+        <input type="radio" name="useful" id="u2" value="2"><label for="u2">2</label>
+        <input type="radio" name="useful" id="u3" value="3"><label for="u3">3</label>
+        <input type="radio" name="useful" id="u4" value="4"><label for="u4">4</label>
+        <input type="radio" name="useful" id="u5" value="5"><label for="u5">5</label>
+      </div>
+      <div class="scale-labels"><span>Nada útil</span><span>Muy útil</span></div>
+      <div class="error-msg" id="err-useful">Selecciona una opción</div>
+    </div>
+
+    <!-- Q3: Recomendación -->
+    <div class="question">
+      <label><span>03</span> ¿Lo recomendarías a un colega?</label>
+      <div class="scale">
+        <input type="radio" name="recommend" id="r1" value="1"><label for="r1">1</label>
+        <input type="radio" name="recommend" id="r2" value="2"><label for="r2">2</label>
+        <input type="radio" name="recommend" id="r3" value="3"><label for="r3">3</label>
+        <input type="radio" name="recommend" id="r4" value="4"><label for="r4">4</label>
+        <input type="radio" name="recommend" id="r5" value="5"><label for="r5">5</label>
+      </div>
+      <div class="scale-labels"><span>Definitivamente no</span><span>Definitivamente sí</span></div>
+      <div class="error-msg" id="err-recommend">Selecciona una opción</div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Q4: Beneficio mayor -->
+    <div class="question">
+      <label><span>04</span> ¿Cuál fue el mayor beneficio que notaste?</label>
+      <textarea name="benefit" id="benefit" placeholder="Ej: Me ahorró tiempo al estructurar el diferencial..."></textarea>
+    </div>
+
+    <!-- Q5: Qué mejorar -->
+    <div class="question">
+      <label><span>05</span> ¿Qué mejorarías del bot?</label>
+      <textarea name="improvement" id="improvement" placeholder="Ej: Me gustaría que respondiera también en inglés..."></textarea>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Q6: Recompra -->
+    <div class="question">
+      <label><span>06</span> ¿Continuarías usando VetPrompt Pro?</label>
+      <div class="options">
+        <input type="radio" name="repurchase" id="rp1" value="Sí, definitivamente">
+        <label for="rp1">✅ Sí, definitivamente</label>
+        <input type="radio" name="repurchase" id="rp2" value="Probablemente sí">
+        <label for="rp2">🤔 Probablemente sí</label>
+        <input type="radio" name="repurchase" id="rp3" value="No por ahora">
+        <label for="rp3">❌ No por ahora</label>
+      </div>
+      <div class="error-msg" id="err-repurchase">Selecciona una opción</div>
+    </div>
+
+    <button type="submit" class="btn-submit" id="submit-btn">Enviar encuesta →</button>
+  </form>
+
+  <div class="success" id="success-msg">
+    <div class="icon">🐾</div>
+    <h2>¡Gracias por tu feedback!</h2>
+    <p>Tu opinión ayuda a mejorar VetPrompt™ Pro para toda la comunidad veterinaria.<br><br>
+    — Equipo BioVetAI™</p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://yyzoszwggxjyjqtjhhjs.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5em9zendnZ3hqeWpxdGpoaGpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3NzE5NDMsImV4cCI6MjA3OTM0Nzk0M30.28_dXZxD7FbfAUHRNxjBGrX8BWpudcxgphJ0yF0DOac';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const form = document.getElementById('survey-form');
+  const btn  = document.getElementById('submit-btn');
+  const successMsg = document.getElementById('success-msg');
+
+  function getRadio(name) {
+    const el = document.querySelector(`input[name="${name}"]:checked`);
+    return el ? el.value : null;
+  }
+
+  function showError(id, show) {
+    document.getElementById(id).style.display = show ? 'block' : 'none';
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const ease       = getRadio('ease');
+    const useful     = getRadio('useful');
+    const recommend  = getRadio('recommend');
+    const repurchase = getRadio('repurchase');
+    const benefit    = document.getElementById('benefit').value.trim();
+    const improvement = document.getElementById('improvement').value.trim();
+
+    let valid = true;
+    if (!ease)       { showError('err-ease', true);      valid = false; } else showError('err-ease', false);
+    if (!useful)     { showError('err-useful', true);    valid = false; } else showError('err-useful', false);
+    if (!recommend)  { showError('err-recommend', true); valid = false; } else showError('err-recommend', false);
+    if (!repurchase) { showError('err-repurchase', true); valid = false; } else showError('err-repurchase', false);
+
+    if (!valid) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    const { error } = await sb.from('survey_vetprompt').insert({
+      ease:        parseInt(ease),
+      useful:      parseInt(useful),
+      recommend:   parseInt(recommend),
+      benefit:     benefit || null,
+      improvement: improvement || null,
+      repurchase
+    });
+
+    if (error) {
+      btn.disabled = false;
+      btn.textContent = 'Enviar encuesta →';
+      alert('Error al enviar. Intenta de nuevo.');
+      console.error(error);
+      return;
+    }
+
+    form.style.display = 'none';
+    successMsg.style.display = 'block';
+  });
+</script>
+</body>
+</html>

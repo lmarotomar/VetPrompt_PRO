@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard — VetPrompt Pro Survey</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg:    #1a1a2e;
+      --deep:  #0a0e1a;
+      --tech:  #0066FF;
+      --life:  #00B894;
+      --teal:  #00A896;
+      --gold:  #F59E0B;
+      --text:  #F0F0F0;
+      --muted: rgba(240,240,240,.65);
+      --border: rgba(240,240,240,.12);
+      --glass: rgba(255,255,255,.07);
+      --grad:  linear-gradient(100deg, #0066FF 0%, #00A896 52%, #00B894 100%);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    #auth-gate {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; flex-direction: column; gap: 1rem;
+    }
+    #auth-gate h2 { font: 700 1.3rem 'Syne', sans-serif; }
+    #auth-gate input {
+      padding: .75rem 1rem; border-radius: 12px;
+      border: 1.5px solid var(--border);
+      background: rgba(255,255,255,.06); color: var(--text);
+      font-size: 1rem; width: 260px; text-align: center;
+    }
+    #auth-gate input:focus { outline: none; border-color: var(--teal); }
+    #auth-gate button {
+      padding: .75rem 2rem; border-radius: 12px; border: none;
+      background: var(--grad); color: #fff;
+      font: 700 .95rem 'Syne', sans-serif; cursor: pointer;
+    }
+    #auth-error { color: #ff6b6b; font-size: .82rem; }
+
+    #dashboard { display: none; }
+
+    header {
+      display: flex; align-items: center;
+      justify-content: space-between; flex-wrap: wrap;
+      gap: 1rem; margin-bottom: 2rem;
+      padding-bottom: 1.2rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .brand { font: 800 1.2rem 'Syne', sans-serif;
+      background: var(--grad);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .realtime-badge {
+      display: flex; align-items: center; gap: .45rem;
+      font-size: .78rem; color: var(--life);
+    }
+    .dot-live {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--life);
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 1rem; margin-bottom: 2rem;
+    }
+    .kpi {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 18px; padding: 1.2rem 1rem;
+      text-align: center;
+    }
+    .kpi strong { display: block; font: 800 2rem 'Syne', sans-serif;
+      background: var(--grad);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .kpi span { font-size: .75rem; color: var(--muted); }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.2rem; margin-bottom: 2rem;
+    }
+    .chart-card {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 18px; padding: 1.2rem;
+    }
+    .chart-card h3 {
+      font: 700 .88rem 'Syne', sans-serif;
+      color: var(--muted); margin-bottom: 1rem;
+      text-transform: uppercase; letter-spacing: .05em;
+    }
+    .chart-wrap { position: relative; height: 180px; }
+
+    .lists-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.2rem; margin-bottom: 2rem;
+    }
+    .list-card {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 18px; padding: 1.2rem;
+      max-height: 320px; overflow-y: auto;
+    }
+    .list-card h3 {
+      font: 700 .88rem 'Syne', sans-serif;
+      color: var(--muted); margin-bottom: .9rem;
+      text-transform: uppercase; letter-spacing: .05em;
+      position: sticky; top: 0;
+      background: #1e2240; padding-bottom: .4rem;
+    }
+    .list-item {
+      font-size: .85rem; color: var(--text);
+      padding: .6rem .8rem; border-radius: 10px;
+      background: rgba(255,255,255,.04);
+      margin-bottom: .5rem; line-height: 1.5;
+      border-left: 3px solid var(--teal);
+    }
+    .list-item time { display: block; font-size: .7rem; color: var(--muted); margin-top: .2rem; }
+    .empty { color: var(--muted); font-size: .83rem; font-style: italic; }
+
+    .btn-csv {
+      display: inline-flex; align-items: center; gap: .5rem;
+      padding: .7rem 1.4rem; border-radius: 12px;
+      background: rgba(0,168,150,.15);
+      border: 1.5px solid rgba(0,168,150,.35);
+      color: var(--teal); font: 600 .88rem 'Syne', sans-serif;
+      cursor: pointer; transition: background .2s;
+    }
+    .btn-csv:hover { background: rgba(0,168,150,.25); }
+
+    @media (max-width: 600px) {
+      body { padding: 1rem .75rem 3rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="auth-gate">
+  <h2>🔐 Dashboard Admin</h2>
+  <input type="password" id="pw-input" placeholder="Contraseña" autocomplete="off">
+  <button onclick="checkPw()">Entrar</button>
+  <span id="auth-error"></span>
+</div>
+
+<div id="dashboard">
+  <header>
+    <div>
+      <div class="brand">VetPrompt™ Pro — Survey Dashboard</div>
+      <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem;">BioVetAI™ · Tiempo real</div>
+    </div>
+    <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
+      <div class="realtime-badge"><span class="dot-live"></span> En vivo</div>
+      <button class="btn-csv" onclick="downloadCSV()">⬇ Descargar CSV</button>
+    </div>
+  </header>
+
+  <div class="kpi-row">
+    <div class="kpi"><strong id="kpi-total">—</strong><span>Respuestas totales</span></div>
+    <div class="kpi"><strong id="kpi-ease">—</strong><span>Facilidad promedio</span></div>
+    <div class="kpi"><strong id="kpi-useful">—</strong><span>Utilidad promedio</span></div>
+    <div class="kpi"><strong id="kpi-recommend">—</strong><span>Recomendación prom.</span></div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <h3>Facilidad de uso</h3>
+      <div class="chart-wrap"><canvas id="chart-ease"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Utilidad clínica</h3>
+      <div class="chart-wrap"><canvas id="chart-useful"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Recomendación</h3>
+      <div class="chart-wrap"><canvas id="chart-recommend"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>¿Continuaría usando?</h3>
+      <div class="chart-wrap"><canvas id="chart-repurchase"></canvas></div>
+    </div>
+  </div>
+
+  <div class="lists-grid">
+    <div class="list-card">
+      <h3>💡 Beneficios reportados</h3>
+      <div id="list-benefits"></div>
+    </div>
+    <div class="list-card">
+      <h3>🔧 Mejoras sugeridas</h3>
+      <div id="list-improvements"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://yyzoszwggxjyjqtjhhjs.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5em9zendnZ3hqeWpxdGpoaGpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3NzE5NDMsImV4cCI6MjA3OTM0Nzk0M30.28_dXZxD7FbfAUHRNxjBGrX8BWpudcxgphJ0yF0DOac';
+  const ADMIN_PW = 'BioVetAI2026!';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  let allData = [];
+
+  // Escape HTML to prevent XSS from user-submitted text
+  function esc(str) {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  function checkPw() {
+    if (document.getElementById('pw-input').value === ADMIN_PW) {
+      document.getElementById('auth-gate').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      init();
+    } else {
+      document.getElementById('auth-error').textContent = 'Contraseña incorrecta';
+    }
+  }
+  document.getElementById('pw-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') checkPw();
+  });
+
+  const GRAD_COLORS = ['#0066FF','#0080E0','#00A896','#00B894','#00D4AA'];
+  const chartOpts = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { color: 'rgba(240,240,240,.6)', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,.06)' } },
+      y: { ticks: { color: 'rgba(240,240,240,.6)', font: { size: 11 }, stepSize: 1 }, grid: { color: 'rgba(255,255,255,.06)' }, beginAtZero: true }
+    }
+  };
+
+  function makeBarChart(id, labels, data) {
+    return new Chart(document.getElementById(id), {
+      type: 'bar',
+      data: { labels, datasets: [{ data, backgroundColor: GRAD_COLORS.slice(0, labels.length), borderRadius: 8, borderSkipped: false }] },
+      options: { ...chartOpts }
+    });
+  }
+
+  function makeDoughnutChart(id, labels, data) {
+    return new Chart(document.getElementById(id), {
+      type: 'doughnut',
+      data: { labels, datasets: [{ data, backgroundColor: ['#00B894','#0066FF','#F59E0B'], borderWidth: 0, hoverOffset: 6 }] },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: true, position: 'bottom', labels: { color: 'rgba(240,240,240,.7)', font: { size: 10 }, boxWidth: 12, padding: 10 } } },
+        cutout: '62%'
+      }
+    });
+  }
+
+  const charts = {};
+
+  function initCharts() {
+    charts.ease       = makeBarChart('chart-ease',       ['1','2','3','4','5'], [0,0,0,0,0]);
+    charts.useful     = makeBarChart('chart-useful',     ['1','2','3','4','5'], [0,0,0,0,0]);
+    charts.recommend  = makeBarChart('chart-recommend',  ['1','2','3','4','5'], [0,0,0,0,0]);
+    charts.repurchase = makeDoughnutChart('chart-repurchase',
+      ['Sí, definitivamente','Probablemente sí','No por ahora'], [0,0,0]);
+  }
+
+  function countScale(data, field) {
+    const counts = [0,0,0,0,0];
+    data.forEach(r => { if (r[field] >= 1 && r[field] <= 5) counts[r[field]-1]++; });
+    return counts;
+  }
+
+  function avg(data, field) {
+    const vals = data.map(r => r[field]).filter(v => v);
+    if (!vals.length) return '—';
+    return (vals.reduce((a,b) => a+b, 0) / vals.length).toFixed(1);
+  }
+
+  function updateDashboard(data) {
+    allData = data;
+
+    document.getElementById('kpi-total').textContent     = data.length;
+    document.getElementById('kpi-ease').textContent      = avg(data, 'ease');
+    document.getElementById('kpi-useful').textContent    = avg(data, 'useful');
+    document.getElementById('kpi-recommend').textContent = avg(data, 'recommend');
+
+    charts.ease.data.datasets[0].data      = countScale(data, 'ease');
+    charts.useful.data.datasets[0].data    = countScale(data, 'useful');
+    charts.recommend.data.datasets[0].data = countScale(data, 'recommend');
+    charts.ease.update();
+    charts.useful.update();
+    charts.recommend.update();
+
+    const rp = { 'Sí, definitivamente': 0, 'Probablemente sí': 0, 'No por ahora': 0 };
+    data.forEach(r => { if (r.repurchase && rp[r.repurchase] !== undefined) rp[r.repurchase]++; });
+    charts.repurchase.data.datasets[0].data = Object.values(rp);
+    charts.repurchase.update();
+
+    renderList('list-benefits',     data, 'benefit',     'Sin beneficios registrados aún');
+    renderList('list-improvements', data, 'improvement', 'Sin mejoras registradas aún');
+  }
+
+  function renderList(containerId, data, field, emptyMsg) {
+    const container = document.getElementById(containerId);
+    const items = data.filter(r => r[field] && r[field].trim());
+
+    // Clear previous content safely
+    while (container.firstChild) container.removeChild(container.firstChild);
+
+    if (!items.length) {
+      const em = document.createElement('span');
+      em.className = 'empty';
+      em.textContent = emptyMsg;
+      container.appendChild(em);
+      return;
+    }
+
+    items.forEach(r => {
+      const div = document.createElement('div');
+      div.className = 'list-item';
+
+      const text = document.createElement('span');
+      text.textContent = r[field];   // textContent — safe, no XSS
+
+      const time = document.createElement('time');
+      time.textContent = new Date(r.created_at).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' });
+
+      div.appendChild(text);
+      div.appendChild(time);
+      container.appendChild(div);
+    });
+  }
+
+  async function loadData() {
+    const { data, error } = await sb
+      .from('survey_vetprompt')
+      .select('*')
+      .order('created_at', { ascending: true });
+    if (!error) updateDashboard(data);
+  }
+
+  function subscribeRealtime() {
+    sb.channel('survey-changes')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'survey_vetprompt' }, () => {
+        loadData();
+      })
+      .subscribe();
+  }
+
+  function init() {
+    initCharts();
+    loadData();
+    subscribeRealtime();
+  }
+
+  function downloadCSV() {
+    if (!allData.length) { alert('Sin datos aún'); return; }
+    const headers = ['id','created_at','ease','useful','recommend','benefit','improvement','repurchase'];
+    const rows = allData.map(r => headers.map(h => {
+      const v = r[h] ?? '';
+      return '"' + String(v).replace(/"/g, '""') + '"';
+    }).join(','));
+    const csv  = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = 'vetprompt_survey_' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+</script>
+</body>
+</html>
