@@ -4,48 +4,50 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dashboard — VetPrompt Pro Survey</title>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
-      --bg:    #1a1a2e;
-      --deep:  #0a0e1a;
-      --tech:  #0066FF;
-      --life:  #00B894;
-      --teal:  #00A896;
+      --bg:    #0a1930;
+      --deep:  #071326;
+      --accent: #28D7DE;
+      --mint:  #3FD5B7;
+      --cyan:  #41E5E1;
       --gold:  #F59E0B;
       --text:  #F0F0F0;
       --muted: rgba(240,240,240,.65);
       --border: rgba(240,240,240,.12);
       --glass: rgba(255,255,255,.07);
-      --grad:  linear-gradient(100deg, #0066FF 0%, #00A896 52%, #00B894 100%);
+      --grad:  linear-gradient(135deg, var(--accent) 0%, var(--mint) 100%);
     }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; text-decoration: none; }
     body {
-      background: var(--bg);
+      background:
+        radial-gradient(circle at 12% 0%, rgba(65,229,225,.10), transparent 30rem),
+        var(--bg);
       color: var(--text);
-      font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+      font-family: Candara, 'Avenir Next', 'Segoe UI', sans-serif;
       min-height: 100vh;
       padding: 2rem 1.5rem 4rem;
     }
+    .tm { font-size: .62em; vertical-align: super; font-weight: 700; text-decoration: none; letter-spacing: 0; }
 
     #auth-gate {
       display: flex; align-items: center; justify-content: center;
       min-height: 100vh; flex-direction: column; gap: 1rem;
     }
-    #auth-gate h2 { font: 700 1.3rem 'Syne', sans-serif; }
+    #auth-gate h2 { font: 700 1.3rem Georgia, Cambria, serif; }
     #auth-gate input {
-      padding: .75rem 1rem; border-radius: 12px;
+      padding: .75rem 1rem; border-radius: 14px;
       border: 1.5px solid var(--border);
       background: rgba(255,255,255,.06); color: var(--text);
       font-size: 1rem; width: 260px; text-align: center;
     }
-    #auth-gate input:focus { outline: none; border-color: var(--teal); }
+    #auth-gate input:focus { outline: none; border-color: var(--mint); }
     #auth-gate button {
-      padding: .75rem 2rem; border-radius: 12px; border: none;
+      padding: .75rem 2rem; border-radius: 14px; border: none;
       background: var(--grad); color: #fff;
-      font: 700 .95rem 'Syne', sans-serif; cursor: pointer;
+      font: 700 .95rem Candara, 'Avenir Next', 'Segoe UI', sans-serif; cursor: pointer;
     }
     #auth-error { color: #ff6b6b; font-size: .82rem; }
 
@@ -58,18 +60,18 @@
       padding-bottom: 1.2rem;
       border-bottom: 1px solid var(--border);
     }
-    .brand { font: 800 1.2rem 'Syne', sans-serif;
+    .brand { font: 800 1.2rem Georgia, Cambria, serif;
       background: var(--grad);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
     }
     .realtime-badge {
       display: flex; align-items: center; gap: .45rem;
-      font-size: .78rem; color: var(--life);
+      font-size: .78rem; color: var(--mint);
     }
     .dot-live {
       width: 8px; height: 8px; border-radius: 50%;
-      background: var(--life);
+      background: var(--mint);
       animation: pulse 1.8s ease-in-out infinite;
     }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
@@ -82,10 +84,10 @@
     .kpi {
       background: var(--glass);
       border: 1px solid var(--border);
-      border-radius: 18px; padding: 1.2rem 1rem;
+      border-radius: 20px; padding: 1.35rem 1.1rem;
       text-align: center;
     }
-    .kpi strong { display: block; font: 800 2rem 'Syne', sans-serif;
+    .kpi strong { display: block; font: 800 2rem Candara, 'Avenir Next', 'Segoe UI', sans-serif;
       background: var(--grad);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -94,20 +96,20 @@
 
     .charts-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 1.2rem; margin-bottom: 2rem;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.4rem; margin-bottom: 2rem;
     }
     .chart-card {
       background: var(--glass);
       border: 1px solid var(--border);
-      border-radius: 18px; padding: 1.2rem;
+      border-radius: 20px; padding: 1.4rem;
     }
     .chart-card h3 {
-      font: 700 .88rem 'Syne', sans-serif;
+      font: 700 .78rem Candara, 'Avenir Next', 'Segoe UI', sans-serif;
       color: var(--muted); margin-bottom: 1rem;
       text-transform: uppercase; letter-spacing: .05em;
     }
-    .chart-wrap { position: relative; height: 180px; }
+    .chart-wrap { position: relative; height: 300px; }
 
     .lists-grid {
       display: grid;
@@ -117,11 +119,11 @@
     .list-card {
       background: var(--glass);
       border: 1px solid var(--border);
-      border-radius: 18px; padding: 1.2rem;
+      border-radius: 20px; padding: 1.4rem;
       max-height: 320px; overflow-y: auto;
     }
     .list-card h3 {
-      font: 700 .88rem 'Syne', sans-serif;
+      font: 700 .78rem Candara, 'Avenir Next', 'Segoe UI', sans-serif;
       color: var(--muted); margin-bottom: .9rem;
       text-transform: uppercase; letter-spacing: .05em;
       position: sticky; top: 0;
@@ -129,24 +131,27 @@
     }
     .list-item {
       font-size: .85rem; color: var(--text);
-      padding: .6rem .8rem; border-radius: 10px;
+      padding: .7rem .9rem; border-radius: 12px;
       background: rgba(255,255,255,.04);
       margin-bottom: .5rem; line-height: 1.5;
-      border-left: 3px solid var(--teal);
+      border-left: 3px solid var(--mint);
     }
     .list-item time { display: block; font-size: .7rem; color: var(--muted); margin-top: .2rem; }
     .empty { color: var(--muted); font-size: .83rem; font-style: italic; }
 
     .btn-csv {
       display: inline-flex; align-items: center; gap: .5rem;
-      padding: .7rem 1.4rem; border-radius: 12px;
-      background: rgba(0,168,150,.15);
-      border: 1.5px solid rgba(0,168,150,.35);
-      color: var(--teal); font: 600 .88rem 'Syne', sans-serif;
+      padding: .7rem 1.4rem; border-radius: 14px;
+      background: rgba(63,213,183,.15);
+      border: 1.5px solid rgba(63,213,183,.35);
+      color: var(--mint); font: 700 .82rem Candara, 'Avenir Next', 'Segoe UI', sans-serif;
       cursor: pointer; transition: background .2s;
     }
-    .btn-csv:hover { background: rgba(0,168,150,.25); }
+    .btn-csv:hover { background: rgba(63,213,183,.25); }
 
+    @media (max-width: 700px) {
+      .charts-grid { grid-template-columns: 1fr; }
+    }
     @media (max-width: 600px) {
       body { padding: 1rem .75rem 3rem; }
     }
@@ -164,8 +169,8 @@
 <div id="dashboard">
   <header>
     <div>
-      <div class="brand">VetPrompt™ Pro — Survey Dashboard</div>
-      <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem;">BioVetAI™ · Tiempo real</div>
+      <div class="brand">VetPrompt<span class="tm">TM</span> Pro — Survey Dashboard</div>
+      <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem;">BioVetAI<span class="tm">TM</span> · Tiempo real</div>
     </div>
     <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
       <div class="realtime-badge"><span class="dot-live"></span> En vivo</div>
