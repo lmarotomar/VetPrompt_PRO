@@ -197,6 +197,14 @@
       <h3>¿Continuaría usando?</h3>
       <div class="chart-wrap"><canvas id="chart-repurchase"></canvas></div>
     </div>
+    <div class="chart-card">
+      <h3>Tipo de práctica</h3>
+      <div class="chart-wrap"><canvas id="chart-practice"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Frecuencia de uso</h3>
+      <div class="chart-wrap"><canvas id="chart-frequency"></canvas></div>
+    </div>
   </div>
 
   <div class="lists-grid">
@@ -238,7 +246,10 @@
     if (e.key === 'Enter') checkPw();
   });
 
-  const GRAD_COLORS = ['#0066FF','#0080E0','#00A896','#00B894','#00D4AA'];
+  const GRAD_COLORS = ['#0066FF','#0080E0','#00A896','#00B894','#00D4AA','#41E5E1'];
+  const PRACTICE_TYPES = ['Pequeños animales','Grandes animales','Mixta','Exóticos','Equinos','Otra'];
+  const USE_FREQUENCIES = ['Una vez','2–3 veces','Semanalmente','Varias veces por semana','Diariamente'];
+  const RETENTION_OPTIONS = ['Sí, lo seguiría usando','Tal vez, con mejoras','No estoy seguro/a','No lo seguiría usando'];
   const chartOpts = {
     responsive: true, maintainAspectRatio: false,
     plugins: { legend: { display: false } },
@@ -256,10 +267,10 @@
     });
   }
 
-  function makeDoughnutChart(id, labels, data) {
+  function makeDoughnutChart(id, labels, data, colors) {
     return new Chart(document.getElementById(id), {
       type: 'doughnut',
-      data: { labels, datasets: [{ data, backgroundColor: ['#00B894','#0066FF','#F59E0B'], borderWidth: 0, hoverOffset: 6 }] },
+      data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0, hoverOffset: 6 }] },
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: true, position: 'bottom', labels: { color: 'rgba(240,240,240,.7)', font: { size: 10 }, boxWidth: 12, padding: 10 } } },
@@ -274,14 +285,20 @@
     charts.ease       = makeBarChart('chart-ease',       ['1','2','3','4','5'], [0,0,0,0,0]);
     charts.useful     = makeBarChart('chart-useful',     ['1','2','3','4','5'], [0,0,0,0,0]);
     charts.recommend  = makeBarChart('chart-recommend',  ['1','2','3','4','5'], [0,0,0,0,0]);
-    charts.repurchase = makeDoughnutChart('chart-repurchase',
-      ['Sí, definitivamente','Probablemente sí','No por ahora'], [0,0,0]);
+    charts.repurchase = makeDoughnutChart('chart-repurchase', RETENTION_OPTIONS,
+      RETENTION_OPTIONS.map(() => 0), ['#00B894','#0066FF','#F59E0B','#ff6b6b']);
+    charts.practice   = makeBarChart('chart-practice',  PRACTICE_TYPES,  PRACTICE_TYPES.map(() => 0));
+    charts.frequency  = makeBarChart('chart-frequency', USE_FREQUENCIES, USE_FREQUENCIES.map(() => 0));
   }
 
   function countScale(data, field) {
     const counts = [0,0,0,0,0];
     data.forEach(r => { if (r[field] >= 1 && r[field] <= 5) counts[r[field]-1]++; });
     return counts;
+  }
+
+  function countCategorical(data, field, categories) {
+    return categories.map(cat => data.filter(r => r[field] === cat).length);
   }
 
   function avg(data, field) {
@@ -305,10 +322,14 @@
     charts.useful.update();
     charts.recommend.update();
 
-    const rp = { 'Sí, definitivamente': 0, 'Probablemente sí': 0, 'No por ahora': 0 };
-    data.forEach(r => { if (r.repurchase && rp[r.repurchase] !== undefined) rp[r.repurchase]++; });
-    charts.repurchase.data.datasets[0].data = Object.values(rp);
+    charts.repurchase.data.datasets[0].data = countCategorical(data, 'repurchase', RETENTION_OPTIONS);
     charts.repurchase.update();
+
+    charts.practice.data.datasets[0].data = countCategorical(data, 'practice', PRACTICE_TYPES);
+    charts.practice.update();
+
+    charts.frequency.data.datasets[0].data = countCategorical(data, 'frequency', USE_FREQUENCIES);
+    charts.frequency.update();
 
     renderList('list-benefits',     data, 'benefit',     'Sin beneficios registrados aún');
     renderList('list-improvements', data, 'improvement', 'Sin mejoras registradas aún');
@@ -369,7 +390,7 @@
 
   function downloadCSV() {
     if (!allData.length) { alert('Sin datos aún'); return; }
-    const headers = ['id','created_at','ease','useful','recommend','benefit','improvement','repurchase'];
+    const headers = ['id','created_at','practice','frequency','ease','useful','recommend','benefit','improvement','repurchase'];
     const rows = allData.map(r => headers.map(h => {
       const v = r[h] ?? '';
       return '"' + String(v).replace(/"/g, '""') + '"';
